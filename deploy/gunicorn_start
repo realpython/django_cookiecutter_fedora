@@ -1,0 +1,39 @@
+#!/bin/bash
+
+### Define script variables
+### =====================================================================================================================
+
+NAME="django_cookiecutter_fedora"                                         # Name of the application
+VIRTUALENV="/opt/django_cookiecutter_fedora/.venv"                         # Path to virtualenv
+DJANGODIR="/opt/django_cookiecutter_fedora"                               # Django Project Directory
+USER=<non-root-user>                                            # the user to run as
+GROUP=<non-root-user>                                           # the group to run as
+NUM_WORKERS=3                                                   # No. of worker processes Gunicorn should spawn
+DJANGO_SETTINGS_MODULE=config.settings.production               # Settings file that Gunicorn should use
+DJANGO_WSGI_MODULE=config.wsgi                                  # WSGI module name
+
+
+### Activate virtualenv and create environment variables
+### =====================================================================================================================
+
+echo "Starting $NAME as `whoami`"
+# Activate the virtual environment
+cd $VIRTUALENV
+source bin/activate
+cd $DJANGODIR
+# Defining the Environment Variables
+export DJANGO_SECRET_KEY='CHANGEME!!!8%ylffu)6j0ogx9a6*$ck2uuw3-7zbm2_j)#0%v=h0ax6rdkw0'
+export DATABASE_URL='postgres:///django_cookiecutter_fedora'
+export DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE
+export PYTHONPATH=$DJANGODIR:$PYTHONPATH
+
+
+### Start Gunicorn
+### =====================================================================================================================
+
+exec gunicorn ${DJANGO_WSGI_MODULE}:application \
+        --name $NAME \
+        --workers $NUM_WORKERS \
+        --user=$USER --group=$GROUP \
+        --log-level=debug \
+        --bind=127.0.0.1:8001
